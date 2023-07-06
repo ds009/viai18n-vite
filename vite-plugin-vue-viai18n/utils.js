@@ -13,7 +13,7 @@ function removeQuotes(text) {
   return text.match(/^(\s*)['"](.*)['"](\s*)$/)[2]
 }
 
-function generateScriptReplacers(script, matchRegex, transMethod='$t') {
+function generateScriptReplacers(script, matchRegex, transMethod) {
   const tokens = esprima.tokenize(script)
   const replacers = []
   const targets = {}
@@ -27,7 +27,7 @@ function generateScriptReplacers(script, matchRegex, transMethod='$t') {
           targets[node.value] = true
           const origin = trimText(removeQuotes(node.value))
           const hash = getTextKey(origin)
-          const newText = `this.${transMethod}("${hash}","${origin}")`
+          const newText = `${transMethod}("${hash}","${origin}")`
           replacers.push({oldText: new RegExp(regSafeText(node.value), 'g'), newText, origin, hash, isScript:true})
         }
       } else {
@@ -37,7 +37,7 @@ function generateScriptReplacers(script, matchRegex, transMethod='$t') {
           if (groups && groups.length > 3) {
             const origin = trimText(groups[2])
             const hash = getTextKey(origin)
-            const newText = groups[1] + '${this.'+transMethod+'("' + hash + '","'+origin+'")}' + groups[3]
+            const newText = groups[1] + '${'+transMethod+'("' + hash + '","'+origin+'")}' + groups[3]
             replacers.push({oldText: node.value, newText, origin, hash, isScript:true})
 
           } else {
@@ -194,6 +194,7 @@ function createJsonIfNotExist(filePath){
 }
 
 function syncJsonFile(data, filePath, defaultLang) {
+  let result = data;
   try {
     const file = fs.readFileSync(filePath)
     const oldData = JSON.parse(file)
@@ -204,7 +205,6 @@ function syncJsonFile(data, filePath, defaultLang) {
       // key 没有变化 不用写文件
       return
     }
-
 
     // assign old data, merge with new data, only two levels
     Object.keys(oldData).forEach(lang => {
@@ -220,11 +220,13 @@ function syncJsonFile(data, filePath, defaultLang) {
         })
       }
     })
-    const messages = JSON.stringify(sortObjectByKey(newData), null, 4);
-    fs.writeFileSync(filePath, messages, {flag: 'w'})// update old file
-  } catch (e) {
-    console.error(filePath + ' file not created!');
-  }
+    result = newData
+  } catch (e) {}
+  writeDataAsJson(filePath, result)
+}
+
+function writeDataAsJson (filePath, data){
+  fs.writeFileSync(filePath, JSON.stringify(sortObjectByKey(data), null, 4), {flag: 'w'})
 }
 
 function sortObjectByKey(unordered) {
@@ -247,7 +249,7 @@ function insertMessages(filename, transMethod) {
   `
 }
 
-function getTransMethod(defaultLang, transMethod) {
+function getTransMethodString(defaultLang, transMethod) {
   // messages put in computed so that languages shown can be switched without refresh the page
   return `
     ${transMethod}(key){
@@ -257,8 +259,19 @@ function getTransMethod(defaultLang, transMethod) {
     },
   `
 }
+function getComposableTransMethodString(defaultLang, transMethod) {
+  return `
+    const ${transMethod} = (key) => {
+      const nuxtApp = useNuxtApp();
+      const lang = nuxtApp.$lang.value || '${defaultLang}';
+      console.log(lang,'ddd');
+      const messages = ${transMethod}Messages[lang] || ${transMethod}Messages['${defaultLang}'] || {};
+      return messages[key]===undefined?key:messages[key];
+    }
+  `
+}
 function insertTransMethod(filename, defaultLang, source, transMethod) {
-  const messageProp = getTransMethod(defaultLang, transMethod);
+  const messageProp = getTransMethodString(defaultLang, transMethod);
   const simpleExport = 'export default { methods:{' + messageProp + '} }'
   // the original default may have different forms, we proxy it here by adding $t method
   const modifiedExport = `
@@ -284,21 +297,14 @@ function insertTransMethod(filename, defaultLang, source, transMethod) {
   }
 }
 
-function insertJSTransMethod(filename, defaultLang, source, transMethod) {
-  const messageProp =getTransMethod(defaultLang, transMethod);
-  // the original default may have different forms, we proxy it here by adding $t method
-  const modifiedExport = `
-    if ($defaultObject.methods){
-      Object.assign($defaultObject.methods,{${messageProp}})
-    }else{
-      $defaultObject.methods = {${messageProp}}
-    }
-
-    export default $defaultObject
-  `
+function insertComposableTransMethod(filename, defaultLang, source, transMethod) {
+  const messageProp = getComposableTransMethodString(defaultLang, transMethod);
   const insertString =  insertMessages(filename,transMethod)
+  console.log(messageProp,'444444', insertString)
   const defaultObject = matchDefaultObject(source)
-  return source.replace(defaultObject[0], ()=> insertString + 'const $defaultObject = ' + defaultObject[2] + '\n' + modifiedExport)
+  const result = insertString + messageProp + source
+  console.log(result)
+  return result;
 }
 
 function matchTemplate(source) {
@@ -312,7 +318,8 @@ function matchDefaultObject(source) {
 }
 
 function matchScript(source) {
-  const matched = source.match(/([\s\S]*?<script[^>]*>)([\s\S]*)(<\/script>[\s\S]*)/)
+  const matched = source.match(/([\s\S]*?<script[^>]*(setup?)>[^>]*)([\s\S]*)(<\/script>[\s\S]*)/)
+  console.log(matched)
   return matched
 }
 
@@ -329,7 +336,7 @@ module.exports = {
   syncJsonFile,
   createJsonIfNotExist,
   insertTransMethod,
-  insertJSTransMethod,
+  insertComposableTransMethod,
   matchTemplate,
   matchScript,
   removeComments,

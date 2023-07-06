@@ -6,7 +6,6 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
   let sourceWithoutComment = utils.removeComments(src);
   const filePath = id.match(/(.*)((\.vue$)|(\.js$))/);
   const jsonPath = filePath[1] + '.messages.json';
-  utils.createJsonIfNotExist(jsonPath);
   let replacers = [];
   const replaceParts={}
   const isJS = filePath[2] === '.js'
@@ -17,9 +16,9 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
     replaceParts.script = sourceWithoutComment
   } else {
     // find template and script part
-    const matchScript = utils.matchScript(sourceWithoutComment)
+    const [matchScript, isComposable] = utils.matchScript(sourceWithoutComment)
     if (matchScript && matchScript[2]) {
-      replaceParts.parts=matchScript.slice(1) // will be used to replace and reform the source code
+      replaceParts.parts= matchScript.slice(1) // will be used to replace and reform the source code
       replaceParts.scriptIndex= 1
       replaceParts.script = replaceParts.parts[1] // will be used to find target texts and generate replacers
       // which part contains template
@@ -45,7 +44,11 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
     // get replacers from script and template
 
     if (replaceParts.script) {// the second group is script body
-      replacers = replacers.concat(utils.generateScriptReplacers(replaceParts.script, matchRegex, transMethod))
+      replacers = replacers.concat(utils.generateScriptReplacers(
+        replaceParts.script,
+        matchRegex,
+        (isComposable?'':'this.') + transMethod
+      ))
     }
     if (replaceParts.template) {
       replacers = replacers.concat(utils.generateTemplateReplacers(replaceParts.template, matchRegex, transMethod))
@@ -77,8 +80,9 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
 
     // import messages
     // and insert $t (use default language if any language isn't found)
-    const insertTransMethod = isJS ? utils.insertJSTransMethod : utils.insertTransMethod;
+    const insertTransMethod = isJS ? utils.insertComposableTransMethod : utils.insertTransMethod;
     sourceWithoutComment = insertTransMethod(filename, languages[0], replaceParts.parts.join(''), transMethod)
   }
+  console.log('here', sourceWithoutComment)
   return sourceWithoutComment
 }

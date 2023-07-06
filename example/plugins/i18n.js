@@ -7,5 +7,4 @@ export default defineNuxtPlugin({
      return  i18nStore.lang
     }))
   },
-
 })

@@ -1,0 +1,22 @@
+{
+  "name": "vite-plugin-vue-viai18n",
+  "version": "0.0.1",
+  "description": "i18n transform plugin for vite/vue which can generate message key automatically",
+  "main": "vite-plugin-vue-viai18n/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ds009/viai18n-vite"
+  },
+  "keywords": [
+    "vue",
+    "i18n"
+  ],
+  "author": "ds009",
+  "license": "MIT",
+  "dependencies": {
+    "@rollup/pluginutils": "^5.0.2",
+    "blueimp-md5": "^2.19.0",
+    "esprima": "^4.0.1",
+    "htmlparser2": "^9.0.0"
+  }
+}

@@ -83,6 +83,5 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
     const insertTransMethod = isJS ? utils.insertComposableTransMethod : utils.insertTransMethod;
     sourceWithoutComment = insertTransMethod(filename, languages[0], replaceParts.parts.join(''), transMethod)
   }
-  console.log('here', sourceWithoutComment)
   return sourceWithoutComment
 }

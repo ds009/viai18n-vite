@@ -9,7 +9,7 @@
 
       <div class="row-item input-item my-4">
         <el-input v-model="testRef" placeholder="输入链接"  />
-        {{testRef}}
+        {{testRef1}}
       </div>
       <el-button :plain="true" @click="open">Show message</el-button>
     </div>
@@ -36,5 +36,6 @@
   const showMessage = computed(() => {
     return testReactive.texts.length > 0 ? '展示' : '隐藏'
   })
-  const testRef = ref('测试ref')
+  const testRef = ref('测试ref') // 直接ref里面的不会根据语言切换动态展示
+  const testRef1 = computed(()=>ref('测试ref111')) // 加个computed就可以
 </script>

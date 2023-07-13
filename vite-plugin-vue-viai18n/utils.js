@@ -271,39 +271,42 @@ function getComposableTransMethodString(defaultLang, transMethod) {
   `
 }
 function insertTransMethod(filename, defaultLang, source, transMethod) {
-  const messageProp = getTransMethodString(defaultLang, transMethod);
-  const simpleExport = 'export default { methods:{' + messageProp + '} }'
-  // the original default may have different forms, we proxy it here by adding $t method
-  const modifiedExport = `
-    if ($defaultObject.methods){
-      Object.assign($defaultObject.methods,{${messageProp}})
-    }else{
-      $defaultObject.methods = {${messageProp}}
-    }
-    export default $defaultObject
-  `
+
   const insertString = insertMessages(filename, transMethod)
-  const script = matchScript(source)
+  const [script, isComposable] = matchScript(source)
   if (script) {
+    if(isComposable) {
+      return source.replace(script[1], ()=>script[1] + insertString + getComposableTransMethodString(defaultLang, transMethod))
+    }
+    // 兼容旧代码
     const defaultObject = matchDefaultObject(script[2]) // script body
     // use function returned string to avoid '$' replacement bug
-    if (defaultObject) {
-      return source.replace(defaultObject[0], ()=>insertString + 'const $defaultObject = ' + defaultObject[2] + '\n' + modifiedExport)
-    } else {
-      return source.replace(script[0], ()=>script[0] + insertString + simpleExport) // script[0] === script[1]+script[2]
-    }
+    if(!defaultObject) return source;
+    const messageProp = getTransMethodString(defaultLang, transMethod);
+    const simpleExport = 'export default { methods:{' + messageProp + '} }'
+    // the original default may have different forms, we proxy it here by adding $t method
+    const modifiedExport = `
+      if ($defaultObject.methods){
+        Object.assign($defaultObject.methods,{${messageProp}})
+      }else{
+        $defaultObject.methods = {${messageProp}}
+      }
+      export default $defaultObject
+    `
+
+    // use function returned string to avoid '$' replacement bug
+    return source.replace(defaultObject[0], ()=>insertString + 'const $defaultObject = ' + defaultObject[2] + '\n' + modifiedExport)
+
   } else {
-    return source + '<script>' + insertString + simpleExport + '</script>'
+    // no script
+    return source + '<script setup>' + insertString + getComposableTransMethodString(defaultLang, transMethod) + '</script>'
   }
 }
 
 function insertComposableTransMethod(filename, defaultLang, source, transMethod) {
   const messageProp = getComposableTransMethodString(defaultLang, transMethod);
   const insertString =  insertMessages(filename,transMethod)
-  console.log(messageProp,'444444', insertString)
-  const defaultObject = matchDefaultObject(source)
   const result = insertString + messageProp + source
-  console.log(result)
   return result;
 }
 
@@ -318,9 +321,8 @@ function matchDefaultObject(source) {
 }
 
 function matchScript(source) {
-  const matched = source.match(/([\s\S]*?<script[^>]*(setup?)>[^>]*)([\s\S]*)(<\/script>[\s\S]*)/)
-  console.log(matched)
-  return matched
+  const matched = source.match(/([\s\S]*?<script[^>]*>)([\s\S]*)(<\/script>[\s\S]*)/)
+  return [matched, /<script[^>]*setup>/.test(source)]
 }
 
 function removeComments(source) {

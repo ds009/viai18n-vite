@@ -264,7 +264,6 @@ function getComposableTransMethodString(defaultLang, transMethod) {
     const ${transMethod} = (key) => {
       const nuxtApp = useNuxtApp();
       const lang = nuxtApp.$lang.value || '${defaultLang}';
-      console.log(lang,'ddd');
       const messages = ${transMethod}Messages[lang] || ${transMethod}Messages['${defaultLang}'] || {};
       return messages[key]===undefined?key:messages[key];
     }

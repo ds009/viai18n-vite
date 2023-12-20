@@ -59,7 +59,7 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
     // only write json file when updateJson === true
     const data = {};
     languages.forEach(lang => {
-      data[lang] = {}
+      data[lang.key] = {}
     })
     replacers.forEach(replacer => {
       // replace source
@@ -70,18 +70,19 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
       if (updateJson && replacer.hash) {
         // generate translations
         languages.forEach(lang => {
-          data[lang][replacer.hash] = replacer.origin
+          data[lang.key][replacer.hash] = lang.translator ? lang.translator(replacer.origin) : replacer.origin
         })
       }
     })
+    const defaultLang = languages[0].key
       // update messages file
-    if (updateJson) utils.syncJsonFile(data, jsonPath, languages[0])
+    if (updateJson) utils.syncJsonFile(data, jsonPath, defaultLang)
 
 
     // import messages
     // and insert $t (use default language if any language isn't found)
     const insertTransMethod = isJS ? utils.insertComposableTransMethod : utils.insertTransMethod;
-    sourceWithoutComment = insertTransMethod(filename, languages[0], replaceParts.parts.join(''), transMethod)
+    sourceWithoutComment = insertTransMethod(filename, defaultLang, replaceParts.parts.join(''), transMethod)
   }
   return sourceWithoutComment
 }

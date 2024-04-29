@@ -199,9 +199,11 @@ function syncJsonFile(data, filePath, defaultLang) {
     const file = fs.readFileSync(filePath);
     const oldData = JSON.parse(file);
     const oldKeys = Object.keys(oldData[defaultLang]).sort();
+    const oldLangs = Object.keys(oldData).sort();
     const newData = Object.assign({}, data);
     const newKeys = Object.keys(newData[defaultLang]).sort();
-    if (JSON.stringify(oldKeys) === JSON.stringify(newKeys)) {
+    const newLangs = Object.keys(newData).sort();
+    if (JSON.stringify(oldKeys) === JSON.stringify(newKeys) && JSON.stringify(oldLangs) === JSON.stringify(newLangs)) {
       // key 没有变化 不用写文件
       return;
     }

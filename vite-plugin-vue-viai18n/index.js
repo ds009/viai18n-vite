@@ -24,7 +24,7 @@ export default function vitePluginVueViai18n(options) {
 
       if (!matchRegex.test(src)) return;
 
-      const result = processI18n(src.slice(), id , options.languages, matchRegex, !viteOption.ssr && process.env.NODE_ENV === 'development')
+      const result = processI18n(src.slice(), id , options.languages, matchRegex, process.env.NODE_ENV === 'development' && !viteOption.ssr)
       return {
         code: result,
         map: { mappings: '' }

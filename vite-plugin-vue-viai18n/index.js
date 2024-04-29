@@ -12,7 +12,8 @@ export default function vitePluginVueViai18n(options) {
   return {
     name: 'replace-i18n-text',
     enforce: 'pre',
-    transform(src, id, viteOption) {
+    transform(src, fileId, viteOption) {
+      const id = fileId.replace('?macro=true','')
       if (!filter(id)) return;
       if (!fileRegex.test(id)) return;
       if(/\/\*\s+viai18n-disable\s+\*\//.test(src)) {

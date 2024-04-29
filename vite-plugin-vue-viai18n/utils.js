@@ -203,6 +203,7 @@ function syncJsonFile(data, filePath, defaultLang) {
     const newData = Object.assign({}, data);
     const newKeys = Object.keys(newData[defaultLang]).sort();
     const newLangs = Object.keys(newData).sort();
+    console.log(oldLangs,newLangs,data)
     if (JSON.stringify(oldKeys) === JSON.stringify(newKeys) && JSON.stringify(oldLangs) === JSON.stringify(newLangs)) {
       // key 没有变化 不用写文件
       return;

@@ -1,7 +1,8 @@
 import { createFilter } from '@rollup/pluginutils';
 import processI18n from "./processI18n";
 import {chineseRegex} from "./utils";
-const fileRegex = /((\.vue)|(\/composables\/.*\.js))$/
+// 不能匹配结尾 vite会加很多查询字符串
+const fileRegex = /((\.vue)|(\/composables\/.*\.js))/
 
 export default function vitePluginVueViai18n(options) {
   if (!options.languages || !options.languages.length) {

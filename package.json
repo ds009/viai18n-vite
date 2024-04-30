@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-vue-viai18n",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "i18n transform plugin for vite/vue which can generate message key automatically",
   "main": "vite-plugin-vue-viai18n/index.js",
   "repository": {

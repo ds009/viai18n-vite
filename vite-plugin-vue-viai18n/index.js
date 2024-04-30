@@ -1,8 +1,8 @@
 import { createFilter } from '@rollup/pluginutils';
 import processI18n from "./processI18n";
 import {chineseRegex} from "./utils";
-// 不能匹配结尾 vite会加很多查询字符串
-const fileRegex = /((\.vue)|(\/composables\/.*\.js))/
+
+const fileRegex = /((\.vue)|(\/composables\/.*\.js))$/
 
 export default function vitePluginVueViai18n(options) {
   if (!options.languages || !options.languages.length) {
@@ -14,7 +14,10 @@ export default function vitePluginVueViai18n(options) {
     name: 'replace-i18n-text',
     enforce: 'pre',
     transform(src, fileId, viteOption) {
-      const id = fileId.replace('?macro=true','')
+      //  vite会加很多查询字符串 要先去掉
+      const qIndex = fileId.indexOf('?');
+      const id = qIndex>0?fileId.slice(0,qIndex):fileId;
+
       if (!filter(id)) return;
       if (!fileRegex.test(id)) return;
       if(/\/\*\s+viai18n-disable\s+\*\//.test(src)) {
@@ -29,7 +32,7 @@ export default function vitePluginVueViai18n(options) {
       const result = processI18n(src.slice(), id , options.languages, matchRegex, process.env.NODE_ENV === 'development' && !viteOption.ssr)
       return {
         code: result,
-        map: { mappings: '' }
+        map: null,
       }
     },
   }

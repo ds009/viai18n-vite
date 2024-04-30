@@ -28,8 +28,10 @@ export default function vitePluginVueViai18n(options) {
       const matchRegex = options.regex || chineseRegex
 
       if (!matchRegex.test(src)) return;
-
-      const result = processI18n(src.slice(), id , options.languages, matchRegex, process.env.NODE_ENV === 'development' && !viteOption.ssr)
+      // ssr: true 的时候不需要重复写json文件
+      const updateJSON = process.env.I18N === 'true' && !(viteOption?.ssr === true)
+      // npm run generate 的时候会updateJSON
+      const result = processI18n(src.slice(), id , options.languages, matchRegex, updateJSON)
       return {
         code: result,
         map: null,

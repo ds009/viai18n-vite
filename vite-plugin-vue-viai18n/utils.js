@@ -350,7 +350,7 @@ function matchDefaultObject(source) {
 
 function matchScript(source) {
   const matched = source.match(/([\s\S]*?<script[^>]*>)([\s\S]*)(<\/script>[\s\S]*)/);
-  return [matched, /<script[^>]*setup>/.test(source)];
+  return [matched, /<script[^>]*setup/.test(source)]; // setup后面可能还有其他设置例如<script setup lang="ts">
 }
 
 function removeComments(source) {

@@ -192,7 +192,15 @@ function createJsonIfNotExist(filePath) {
     fs.writeFileSync(filePath, "{}");
   }
 }
+function fileExist(filePath) {
+  try {
+    const file = fs.readFileSync(filePath);
+    if(file) return true
+  }catch (e) {
 
+  }
+  return false
+}
 function syncJsonFile(data, filePath, defaultLang) {
   let result = data;
   try {
@@ -371,4 +379,5 @@ module.exports = {
   matchScript,
   removeComments,
   chineseRegex,
+  fileExist,
 };

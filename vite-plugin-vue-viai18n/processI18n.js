@@ -45,9 +45,9 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
 
     if (replaceParts.script) {// the second group is script body
       replacers = replacers.concat(utils.generateScriptReplacers(
-        replaceParts.script,
-        matchRegex,
-        (isComposable?'':'this.') + transMethod
+          replaceParts.script,
+          matchRegex,
+          (isComposable?'':'this.') + transMethod
       ))
     }
     if (replaceParts.template) {
@@ -75,8 +75,9 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
       }
     })
     const defaultLang = languages[0].key
-      // update messages file
-    if (updateJson) utils.syncJsonFile(data, jsonPath, defaultLang)
+    // update messages file
+    // 如果需要update或者不存在文件
+    if (updateJson||!utils.fileExist(jsonPath)) utils.syncJsonFile(data, jsonPath, defaultLang)
 
 
     // import messages

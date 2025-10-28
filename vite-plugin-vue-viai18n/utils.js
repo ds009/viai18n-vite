@@ -234,6 +234,18 @@ function syncJsonFile(data, filePath, defaultLang) {
   } catch (e) {
   }
   writeDataAsJson(filePath, result);
+  return result
+}
+
+function compressMessages(filePath, languages) {
+  const file = fs.readFileSync(filePath);
+  const messages = JSON.parse(file);
+  const langs = languages.map(l=>l.key);
+  const compressed = [[...Object.keys(messages[langs[0]])]]
+  langs.forEach(l=>{
+    compressed.push([...compressed[0].map(k=>messages[l][k]),l])
+  });
+  return compressed
 }
 
 function writeDataAsJson(filePath, data) {
@@ -259,6 +271,14 @@ function insertMessages(filename, transMethod) {
     import ${transMethod}Messages from "./${filename}.messages.json";
   `;
 }
+function insertCompressedMessages(transMethod, messages) {
+  // disable viai18n to prevent repeating the process
+  return `
+    /* viai18n-disable */
+    const _cm = ${JSON.stringify(messages)};
+    const ${transMethod}Messages = _cm.slice(1).reduce((a, l) => ({ ...a, [l.at(-1)]: _cm[0].reduce((m, k, i) => ({ ...m, [k]: l[i] }), {}), }), {});
+  `;
+}
 
 function getTransMethodString(defaultLang, transMethod) {
   // messages put in computed so that languages shown can be switched without refresh the page
@@ -282,9 +302,9 @@ function getComposableTransMethodString(defaultLang, transMethod) {
   `;
 }
 
-function insertTransMethod(filename, defaultLang, source, transMethod) {
+function insertTransMethod(filename, defaultLang, source, transMethod, compressedMessages) {
 
-  const insertString = insertMessages(filename, transMethod);
+  const insertString = compressedMessages ? insertCompressedMessages(transMethod,compressedMessages) :insertMessages(filename, transMethod);
   const [script, isComposable] = matchScript(source);
   if (script) {
     if (isComposable) {
@@ -339,9 +359,9 @@ function insertTransMethod(filename, defaultLang, source, transMethod) {
   }
 }
 
-function insertComposableTransMethod(filename, defaultLang, source, transMethod) {
+function insertComposableTransMethod(filename, defaultLang, source, transMethod, compressedMessages) {
   const messageProp = getComposableTransMethodString(defaultLang, transMethod);
-  const insertString = insertMessages(filename, transMethod);
+  const insertString = compressedMessages ? insertCompressedMessages(transMethod,compressedMessages) :insertMessages(filename, transMethod);
   const result = insertString + messageProp + source;
   return result;
 }
@@ -380,4 +400,5 @@ module.exports = {
   removeComments,
   chineseRegex,
   fileExist,
+  compressMessages,
 };

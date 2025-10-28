@@ -31,7 +31,7 @@ export default function vitePluginVueViai18n(options) {
       // ssr: true 的时候不需要重复写json文件
       const updateJSON = process.env.I18N === 'true' && !(viteOption?.ssr === true)
       // npm run generate 的时候会updateJSON
-      const result = processI18n(src.slice(), id , options.languages, matchRegex, updateJSON)
+      const result = processI18n(src.slice(), id , options.languages, matchRegex, updateJSON, options.compress)
       return {
         code: result,
         map: null,

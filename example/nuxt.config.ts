@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     vite: {
         plugins: [
             vitePluginVueViai18n({
+                compress: true, // 实际项目里 测试和prod开启
                 languages,
             }), Inspect()
         ],

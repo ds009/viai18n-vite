@@ -1,6 +1,6 @@
 import utils from "./utils";
 
-export default function processI18n (src, id, languages, matchRegex, updateJson) {
+export default function processI18n (src, id, languages, matchRegex, updateJson, shouldCompress) {
   const filename = utils.getFileName(id);
   const transMethod = '$V' +(filename.replace(/[^a-zA-Z]/g,'')||'text');
   let sourceWithoutComment = utils.removeComments(src);
@@ -78,12 +78,14 @@ export default function processI18n (src, id, languages, matchRegex, updateJson)
     // update messages file
     // 如果需要update或者不存在文件
     if (updateJson||!utils.fileExist(jsonPath)) utils.syncJsonFile(data, jsonPath, defaultLang)
-
-
+    let compressedMessages = null;
+    if (!updateJson && utils.fileExist(jsonPath) && shouldCompress) {
+      compressedMessages = utils.compressMessages(jsonPath, languages)
+    }
     // import messages
     // and insert $t (use default language if any language isn't found)
     const insertTransMethod = isJS ? utils.insertComposableTransMethod : utils.insertTransMethod;
-    sourceWithoutComment = insertTransMethod(filename, defaultLang, replaceParts.parts.join(''), transMethod)
+    sourceWithoutComment = insertTransMethod(filename, defaultLang, replaceParts.parts.join(''), transMethod, compressedMessages)
   }
   return sourceWithoutComment
 }

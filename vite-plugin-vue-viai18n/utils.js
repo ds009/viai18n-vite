@@ -240,7 +240,7 @@ function syncJsonFile(data, filePath, defaultLang) {
 function compressMessages(filePath, languages) {
   const file = fs.readFileSync(filePath);
   const messages = JSON.parse(file);
-  const langs = languages.map(l=>l.key);
+  const langs = languages.filter(l=>!l.hide).map(l=>l.key);
   const compressed = [[...Object.keys(messages[langs[0]])]]
   langs.forEach(l=>{
     compressed.push([...compressed[0].map(k=>messages[l][k]),l])
